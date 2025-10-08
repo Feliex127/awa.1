@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoSub - 自動影片字幕生成</title>
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --accent-color: #4cc9f0;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --success-color: #4bb543;
+            --warning-color: #ffcc00;
+            --danger-color: #dc3545;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fb;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            margin-right: 10px;
+            font-size: 2rem;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-left: 20px;
+        }
+        
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        
+        nav ul li a:hover {
+            opacity: 0.8;
+        }
+        
+        .hero {
+            padding: 3rem 0;
+            text-align: center;
+            background-color: white;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+        
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--secondary-color);
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 2rem;
+            color: #555;
+        }
+        
+        .btn {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-secondary {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e9ecef;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .card h2 {
+            margin-bottom: 1rem;
+            color: var(--secondary-color);
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 0.5rem;
+        }
+        
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: var(--primary-color);
+            background-color: #f8fbff;
+        }
+        
+        .upload-area i {
+            font-size: 3rem;
+            color: #aaa;
+            margin-bottom: 1rem;
+        }
+        
+        .upload-area p {
+            color: #777;
+        }
+        
+        .video-preview {
+            width: 100%;
+            background-color: #000;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .video-preview video {
+            width: 100%;
+            border-radius: 8px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }
+        
+        .subtitle-editor {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .subtitle-item {
+            padding: 0.8rem;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+        
+        .subtitle-item:last-child {
+            border-bottom: none;
+        }
+        
+        .subtitle-time {
+            font-weight: 600;
+            margin-right: 1rem;
+            min-width: 100px;
+        }
+        
+        .subtitle-text {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .timeline {
+            height: 80px;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            margin-top: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .timeline-progress {
+            height: 100%;
+            background-color: var(--accent-color);
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        
+        .timeline-marker {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background-color: var(--danger-color);
+        }
+        
+        footer {
+            background-color: var(--dark-color);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .footer-links {
+            display: flex;
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-left: 20px;
+        }
+        
+        .footer-links a {
+            color: #ccc;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            nav ul {
+                margin-top: 1rem;
+                justify-content: center;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+            }
+            
+            .footer-links {
+                margin-top: 1rem;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-closed-captioning"></i>
+                    AutoSub
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="#">首頁</a></li>
+                        <li><a href="#">功能</a></li>
+                        <li><a href="#">定價</a></li>
+                        <li><a href="#">幫助</a></li>
+                        <li><a href="#" class="btn btn-secondary">登入</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h1>自動為您的影片添加字幕</h1>
+            <p>使用先進的語音識別技術，快速準確地為您的影片生成字幕，支持多種語言和格式導出。</p>
+            <a href="#upload" class="btn">開始使用</a>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="main-content">
+            <div class="card">
+                <h2><i class="fas fa-upload"></i> 上傳影片</h2>
+                <div class="upload-area" id="upload">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h3>拖放影片檔案到這裡</h3>
+                    <p>或</p>
+                    <input type="file" id="file-input" accept="video/*" style="display: none;">
+                    <button class="btn" onclick="document.getElementById('file-input').click()">選擇檔案</button>
+                    <p>支持 MP4, MOV, AVI 等格式，最大 500MB</p>
+                </div>
+                
+                <div class="video-preview" id="video-preview">
+                    <video controls id="video-player">
+                        您的瀏覽器不支持視頻播放。
+                    </video>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn" id="generate-btn" disabled>
+                        <i class="fas fa-magic"></i> 生成字幕
+                    </button>
+                    <button class="btn btn-secondary" id="export-btn" disabled>
+                        <i class="fas fa-download"></i> 導出影片
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-closed-captioning"></i> 字幕編輯器</h2>
+                <div class="subtitle-editor" id="subtitle-editor">
+                    <div class="subtitle-item">
+                        <span class="subtitle-time">00:00 - 00:05</span>
+                        <input type="text" class="subtitle-text" value="歡迎使用 AutoSub 自動字幕生成服務">
+                    </div>
+                    <div class="subtitle-item">
+                        <span class="subtitle-time">00:05 - 00:10</span>
+                        <input type="text" class="subtitle-text" value="上傳您的影片並點擊生成字幕按鈕">
+                    </div>
+                    <div class="subtitle-item">
+                        <span class="subtitle-time">00:10 - 00:15</span>
+                        <input type="text" class="subtitle-text" value="系統將自動識別語音並生成時間軸">
+                    </div>
+                    <div class="subtitle-item">
+                        <span class="subtitle-time">00:15 - 00:20</span>
+                        <input type="text" class="subtitle-text" value="您可以在這裡編輯字幕內容和時間">
+                    </div>
+                    <div class="subtitle-item">
+                        <span class="subtitle-time">00:20 - 00:25</span>
+                        <input type="text" class="subtitle-text" value="完成後可以導出帶字幕的影片">
+                    </div>
+                </div>
+                
+                <div class="timeline">
+                    <div class="timeline-progress" id="timeline-progress"></div>
+                    <div class="timeline-marker" id="timeline-marker"></div>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn" id="add-subtitle-btn">
+                        <i class="fas fa-plus"></i> 添加字幕
+                    </button>
+                    <button class="btn btn-secondary" id="sync-btn">
+                        <i class="fas fa-sync-alt"></i> 同步時間軸
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="logo">
+                    <i class="fas fa-closed-captioning"></i>
+                    AutoSub
+                </div>
+                <ul class="footer-links">
+                    <li><a href="#">關於我們</a></li>
+                    <li><a href="#">隱私政策</a></li>
+                    <li><a href="#">服務條款</a></li>
+                    <li><a href="#">聯繫我們</a></li>
+                </ul>
+            </div>
+            <p style="margin-top: 1rem; color: #aaa;">&copy; 2023 AutoSub 版權所有</p>
+        </div>
+    </footer>
+
+    <script>
+        // 文件上傳處理
+        document.getElementById('file-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const videoPreview = document.getElementById('video-preview');
+                const videoPlayer = document.getElementById('video-player');
+                const generateBtn = document.getElementById('generate-btn');
+                
+                videoPlayer.src = URL.createObjectURL(file);
+                videoPreview.style.display = 'block';
+                generateBtn.disabled = false;
+                
+                // 模擬影片載入
+                videoPlayer.addEventListener('loadedmetadata', function() {
+                    console.log('影片載入完成，時長:', videoPlayer.duration, '秒');
+                });
+            }
+        });
+        
+        // 生成字幕按鈕事件
+        document.getElementById('generate-btn').addEventListener('click', function() {
+            const exportBtn = document.getElementById('export-btn');
+            const subtitleEditor = document.getElementById('subtitle-editor');
+            
+            // 模擬生成字幕過程
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 生成中...';
+            this.disabled = true;
+            
+            setTimeout(function() {
+                document.getElementById('generate-btn').innerHTML = '<i class="fas fa-check"></i> 字幕生成完成';
+                exportBtn.disabled = false;
+                
+                // 添加更多示例字幕
+                for (let i = 0; i < 5; i++) {
+                    const subtitleItem = document.createElement('div');
+                    subtitleItem.className = 'subtitle-item';
+                    subtitleItem.innerHTML = `
+                        <span class="subtitle-time">${formatTime(25 + i*5)} - ${formatTime(30 + i*5)}</span>
+                        <input type="text" class="subtitle-text" value="這是自動生成的字幕內容 ${i+1}">
+                    `;
+                    subtitleEditor.appendChild(subtitleItem);
+                }
+            }, 2000);
+        });
+        
+        // 導出按鈕事件
+        document.getElementById('export-btn').addEventListener('click', function() {
+            alert('影片導出功能將在新視窗開啟，請稍候...');
+            // 實際應用中這裡會處理影片導出邏輯
+        });
+        
+        // 添加字幕按鈕事件
+        document.getElementById('add-subtitle-btn').addEventListener('click', function() {
+            const subtitleEditor = document.getElementById('subtitle-editor');
+            const subtitleCount = subtitleEditor.children.length;
+            const startTime = subtitleCount * 5;
+            
+            const subtitleItem = document.createElement('div');
+            subtitleItem.className = 'subtitle-item';
+            subtitleItem.innerHTML = `
+                <span class="subtitle-time">${formatTime(startTime)} - ${formatTime(startTime + 5)}</span>
+                <input type="text" class="subtitle-text" placeholder="輸入字幕內容">
+            `;
+            subtitleEditor.appendChild(subtitleItem);
+            subtitleEditor.scrollTop = subtitleEditor.scrollHeight;
+        });
+        
+        // 時間格式化函數
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        // 拖放功能
+        const uploadArea = document.querySelector('.upload-area');
+        
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.borderColor = var('--primary-color');
+            this.style.backgroundColor = '#f8fbff';
+        });
+        
+        uploadArea.addEventListener('dragleave', function() {
+            this.style.borderColor = '#ccc';
+            this.style.backgroundColor = 'transparent';
+        });
+        
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#ccc';
+            this.style.backgroundColor = 'transparent';
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('file-input').files = files;
+                const event = new Event('change');
+                document.getElementById('file-input').dispatchEvent(event);
+            }
+        });
+        
+        // 影片播放時更新時間軸
+        const videoPlayer = document.getElementById('video-player');
+        const timelineProgress = document.getElementById('timeline-progress');
+        const timelineMarker = document.getElementById('timeline-marker');
+        
+        videoPlayer.addEventListener('timeupdate', function() {
+            if (videoPlayer.duration) {
+                const progress = (videoPlayer.currentTime / videoPlayer.duration) * 100;
+                timelineProgress.style.width = `${progress}%`;
+                
+                // 更新時間軸標記位置
+                const markerPosition = (videoPlayer.currentTime / videoPlayer.duration) * 100;
+                timelineMarker.style.left = `${markerPosition}%`;
+            }
+        });
+    </script>
+</body>
+</html>
